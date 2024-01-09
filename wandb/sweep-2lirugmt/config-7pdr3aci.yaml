@@ -1,0 +1,10 @@
+wandb_version: 1
+
+datasets:
+  value: pacs
+hparams:
+  value: 0
+kd_algos:
+  value: no_kd
+trials:
+  value: 1
