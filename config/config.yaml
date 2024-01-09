@@ -1,0 +1,40 @@
+
+sweep_config: 
+  metric:
+    name: "val_loss"
+    goal: "minimize"
+  method: "grid"
+sweep_parameters:
+  kd_algos: 
+    - "no_kd"
+    - "kd"
+    - "kd_plus"
+    - "kd_plus_plus"
+  datasets:
+    - "pacs"
+    - "office_home"
+    - "vlcs"
+  n_trials: 3
+  n_hparams: 5
+wandb:
+  project: "fond-teacher"
+
+#  = {
+#     "method": "bayes",
+#     "name": "tuning-sweep-2",
+#     "metric": {"goal": "minimize", "name": "val_loss"},
+#     "parameters": {
+#         "batch_size": {"values": [2048, 4096]},
+#         "dropout_probability": {"min": 0.2, "max": 0.8},
+#         "kernel_size": {"values": [1, 2]},
+#         "num_conv_layers": {"values": [3, 4, 5]},
+#         "apply_normalization": {"values": [True, False]},
+#         "activation_function": {"values": ["relu", "tanh"]},
+#         "weight_decay": {"max": 0.1, "min": 0.00001},
+#         "lr": {"max": 0.1, "min": 0.0000001},
+#         "beta_1": {"max": 0.95, "min": 0.85},
+#         "beta_2": {"max": 0.9995, "min": 0.98},
+#         "apply_optimization_scheduler": {"values": [True, False]},
+#     },
+#     "run_cap": 30
+# }
