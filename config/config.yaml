@@ -17,6 +17,7 @@ sweep_parameters:
   n_trials: 3
   n_hparams: 5
 wandb:
+  entity: "critical-ml-dg"
   project: "fond-teacher"
 
 #  = {
