@@ -1,5 +1,6 @@
 lightning==2.1.2
 notebook
+numpy==1.26.3
 seaborn
 matplotlib
 tensorboard==2.15.1

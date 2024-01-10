@@ -16,7 +16,14 @@ class VLCS(MultipleEnvironmentImageFolder):
         "100": [list(range(5)), list(range(5)), list(range(5))],
     }
 
-    def __init__(self, root, test_envs, hparams, overlap, overlap_seed):
+    def __init__(
+        self,
+        root: str,
+        test_envs: list,
+        hparams: dict,
+        overlap_type: str,
+        overlap_seed=None,
+    ):
         # print(f"[info] {type(self)}, test_envs: {test_envs}, overlap: {class_overlap_id}")
         self.dir = os.path.join(root, "VLCS/")
         self._num_source_domains = 3
@@ -27,5 +34,5 @@ class VLCS(MultipleEnvironmentImageFolder):
             test_envs,
             hparams["data_augmentation"],
             hparams,
-            VLCS.OVERLAP_CONFIG[overlap],
+            VLCS.OVERLAP_CONFIG[overlap_type],
         )
