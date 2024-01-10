@@ -3,26 +3,21 @@ import argparse
 import yaml
 from src.utils.hparams import seed_hash, random_hparams
 
-last_test_set = {
-    "pacs": [],
-    "vlcs": [],
-    "office_home": [],
-}
+NUM_TEST_SETS = 4
 
 def main():
     run = wandb.init()
 
-    # Get test domain index based on last one run
-    # TODO: Find a better way to get the test set from sweep
-    if not run.config.datasets in last_test_set:
-        raise KeyError("Invalid dataset name.")
-    else:
-        test_domain = len(last_test_set[run.config.datasets])
-        last_test_set[run.config.datasets].append(test_domain)
+    # Access sweep configuration
+    kd_algo = wandb.config.kd_algo
+    dataset = wandb.config.dataset
+    test_set_id = wandb.config.test_set_id
+    hparam_id = wandb.config.hparam_id
+    trial_id = wandb.config.trial_id
 
-    # Get hparams
-    hparam_seed = seed_hash(run.config.trials, run.config.hparams)
-    hparams = random_hparams(run.config.kd_algos, run.config.datasets, hparam_seed)
+    # Get hyperparameters
+    hparam_seed = seed_hash(trial_id, hparam_id)
+    hparams = random_hparams(kd_algo, dataset, hparam_seed)
 
     # TODO: function to run experiment with algorithm
 
@@ -35,17 +30,21 @@ if __name__ == "__main__":
     with open(args.config, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
+    # Format parameters to match sweep parameter formatting
     sweep_parameters = {
-        "kd_algos": {
+        "kd_algo": {
             "values": config["sweep_parameters"]["kd_algos"]
         },
-        "datasets": {
+        "dataset": {
             "values": config["sweep_parameters"]["datasets"]
         },
-        "hparams": {
+        "test_set_id": {
+            "values": [i for i in range(NUM_TEST_SETS)]
+        },
+        "hparam_id": {
             "values": [i for i in range(config["sweep_parameters"]["n_hparams"])]
         },
-        "trials": {
+        "trial_id": {
             "values": [i for i in range(config["sweep_parameters"]["n_trials"])]
         },
     }
@@ -62,5 +61,5 @@ if __name__ == "__main__":
         project=config["wandb"]["project"]
     )
 
-    wandb.agent(sweep_id, function=main, count=4)
+    wandb.agent(sweep_id, function=main)
   
