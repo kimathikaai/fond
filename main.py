@@ -58,6 +58,7 @@ if __name__ == "__main__":
 
     sweep_id = wandb.sweep(
         sweep=sweep_config,
+        entity=config["wandb"]["entity"],
         project=config["wandb"]["project"]
     )
 
