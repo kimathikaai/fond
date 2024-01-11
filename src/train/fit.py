@@ -202,15 +202,15 @@ def fit(
                 for class_id, class_acc in per_class_acc.items():
                     results_dict[loader_type]["acc-" + str(class_id)].append(class_acc)
 
-                # log metrics
-                for stage, results in results_dict.items():
-                    for metric, values in results.items():
-                        wandb.log(
-                            {
-                                stage + "/" + metric: np.nanmean(values),
-                                "step": step,
-                                "epoch": step / steps_per_epoch,
-                            }
-                        )
+            # log metrics
+            for stage, results in results_dict.items():
+                for metric, values in results.items():
+                    wandb.log(
+                        {
+                            stage + "/" + metric: np.nanmean(values),
+                            "step": step,
+                            "epoch": step / steps_per_epoch,
+                        }
+                    )
 
             checkpoint_vals = collections.defaultdict(lambda: [])
