@@ -1,11 +1,14 @@
-import wandb
 import argparse
-import yaml
 
-from src.utils.hparams import seed_hash, random_hparams
+import wandb
+import yaml
+from dotenv import load_dotenv
+
 from src.train.fit import fit
+from src.utils.hparams import random_hparams, seed_hash
 
 NUM_TEST_SETS = 4
+
 
 def main():
     run = wandb.init()
@@ -38,13 +41,15 @@ def main():
         overlap_type=overlap,
         holdout_fraction=holdout_fraction,
         n_steps=n_steps,
-        checkpoint_freq=checkpoint_freq
+        checkpoint_freq=checkpoint_freq,
     )
 
     wandb.finish()
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    load_dotenv()
     parser.add_argument("--config", type=str, default="config/config.yaml")
     args = parser.parse_args()
     with open(args.config, "r") as f:
@@ -52,18 +57,10 @@ if __name__ == "__main__":
 
     # Format parameters to match sweep parameter formatting
     sweep_parameters = {
-        "kd_algo": {
-            "values": config["sweep_parameters"]["kd_algos"]
-        },
-        "dataset": {
-            "values": config["sweep_parameters"]["datasets"]
-        },
-        "overlap": {
-            "values": config["sweep_parameters"]["overlaps"]
-        },
-        "test_set_id": {
-            "values": [i for i in range(NUM_TEST_SETS)]
-        },
+        "kd_algo": {"values": config["sweep_parameters"]["kd_algos"]},
+        "dataset": {"values": config["sweep_parameters"]["datasets"]},
+        "overlap": {"values": config["sweep_parameters"]["overlaps"]},
+        "test_set_id": {"values": [i for i in range(NUM_TEST_SETS)]},
         "hparam_id": {
             "values": [i for i in range(config["sweep_parameters"]["n_hparams"])]
         },
@@ -74,22 +71,14 @@ if __name__ == "__main__":
 
     experiment_parameters = config["experiment_parameters"]
     for parameter in experiment_parameters:
-        sweep_parameters[parameter] = {
-            "value": experiment_parameters[parameter]
-        }
+        sweep_parameters[parameter] = {"value": experiment_parameters[parameter]}
 
-    sweep_config = {
-        **config["sweep_config"],
-        "parameters": {
-            **sweep_parameters
-        }
-    }
+    sweep_config = {**config["sweep_config"], "parameters": {**sweep_parameters}}
 
     sweep_id = wandb.sweep(
         sweep=sweep_config,
         entity=config["wandb"]["entity"],
-        project=config["wandb"]["project"]
+        project=config["wandb"]["project"],
     )
 
     wandb.agent(sweep_id, function=main)
-  
