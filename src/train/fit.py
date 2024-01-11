@@ -148,14 +148,20 @@ def fit(
         wandb.log({"step_time": time.time() - step_start_time})
 
         if (step % checkpoint_freq == 0) or (step == n_steps - 1):
-            results = {}
+            results_dict = {
+                key: {
+                    _key: []
+                    for _key in ["acc", "f1", "nacc", "oacc", 'recall']
+                    + [f"acc-{i}" for i in range(dataset.num_classes)]
+                }
+                for key in ["train", "val", "test", "other"]
+            }
 
             # Calculate training value averages
             for key, val in checkpoint_vals.items():
                 if np.isnan(np.mean(val)):
                     raise Exception(f"{key}: {np.mean(val)}")
-                results["train/" + str(key)] = np.mean(val)
-                # tb_writer.add_scalar(key, np.mean(val), step)
+                results_dict["train"].update({str(key): val})
 
             #
             # Evaluation
@@ -165,45 +171,42 @@ def fit(
                 eval_loaders,
                 eval_weights,
             ):
-                (
-                    acc,
-                    f1,
-                    overlap_class_acc,
-                    non_overlap_class_acc,
-                    per_class_acc,
-                ) = misc.accuracy(algorithm, loader, weights, device, dataset)
+                (acc, recall, f1, oacc, nacc, per_class_acc) = misc.accuracy(
+                    algorithm, loader, weights, device, dataset
+                )
 
-                domain_idx = int(
-                    name[3]
-                )  # env{domain_idx}_{rest_of_string} is how name is formatted
+                # env{domain_idx}_{rest_of_string} is how name is formatted
+                domain_idx = int(name[3])
 
                 loader_type = ""
                 if domain_idx in test_envs:
                     if "in" in name:  # Note 'in' is the 80%
                         loader_type = "test"
                     else:
-                        loader_type = "ignore"
+                        loader_type = "other"
                 elif "out" in name:  # Note 'out' is the 20%
                     loader_type = "val"
                 else:
                     loader_type = "train"
 
-                metric_values = {
-                    loader_type + "/" + name + "_acc": float(acc),
-                    loader_type + "/" + name + "_f1": float(f1),
-                    loader_type + "/" + name + "_nacc": float(non_overlap_class_acc),
-                    loader_type + "/" + name + "_oacc": float(overlap_class_acc),
-                }
-                # per class accuracy
+                # update results
+                results_dict[loader_type]["acc"].append(float(acc))
+                results_dict[loader_type]["recall"].append(float(recall))
+                results_dict[loader_type]["f1"].append(float(f1))
+                results_dict[loader_type]["nacc"].append(float(nacc))
+                results_dict[loader_type]["oacc"].append(float(oacc))
                 for class_id, class_acc in per_class_acc.items():
-                    metric_values[
-                        loader_type + "/" + name + "_accC" + str(class_id)
-                    ] = class_acc
-
-                results.update(metric_values)
+                    results_dict[loader_type]["acc-" + str(class_id)].append(class_acc)
 
                 # log metrics
-                for key, val in metric_values.items():
-                    wandb.log({key: val, "step": step, "epoch": step / steps_per_epoch})
+                for stage, results in results_dict.items():
+                    for metric, values in results.items():
+                        wandb.log(
+                            {
+                                stage + "/" + metric: np.nanmean(values),
+                                "step": step,
+                                "epoch": step / steps_per_epoch,
+                            }
+                        )
 
             checkpoint_vals = collections.defaultdict(lambda: [])
