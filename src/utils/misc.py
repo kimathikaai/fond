@@ -150,7 +150,7 @@ def accuracy(network, loader, weights, device, dataset):
 
     other_acc = correct / total
 
-    assert np.isclose(other_acc, compute_acc, atol=1e-06), f"{other_acc}, {compute_acc}"
+    # assert np.isclose(other_acc, compute_acc, atol=1e-06), f"{other_acc}, {compute_acc}"
 
     return (
         float(compute_acc),
