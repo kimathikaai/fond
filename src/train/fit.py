@@ -48,6 +48,7 @@ def fit(
         hparams = random_hparams(
             algorithm_name, dataset_name, misc.seed_hash(hparams_seed, trial_seed)
         )
+    print('[info] hparams: ', hparams)
 
     # Add hyperparameters to config
     wandb.config.update({"hparams": hparams})
@@ -62,6 +63,7 @@ def fit(
 
     # get overlapping classes
     hparams["C_oc"] = dataset.overlapping_classes
+    print(f'[info] Loaded {dataset_name}')
 
     #
     # Split each env into an 'in-split' and an 'out-split'. We'll train on
@@ -110,6 +112,7 @@ def fit(
 
     eval_loader_names = ["env{}_in".format(i) for i in range(len(in_splits))]
     eval_loader_names += ["env{}_out".format(i) for i in range(len(out_splits))]
+    print(f'[info] Created data loaders:  {eval_loader_names}')
 
     train_minibatches_iterator = zip(*train_loaders)
     steps_per_epoch = min([len(env) / hparams["batch_size"] for env, _ in in_splits])
@@ -124,11 +127,12 @@ def fit(
         hparams=hparams,
     )
     algorithm.to(device)
+    print(f'[info] Algorithm {algorithm_name} setup')
 
     #
     # Training loop
     #
-    print("Begining training loop")
+    print(f"[info] Begining training loop, with {steps_per_epoch} steps per epoch")
     checkpoint_vals = collections.defaultdict(lambda: [])
 
     for step in range(n_steps):
