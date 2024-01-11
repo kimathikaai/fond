@@ -1,3 +1,3 @@
-from fond import FOND
+from src.networks.fond import FOND
 
 ALGORITHMS = {"FOND": FOND}

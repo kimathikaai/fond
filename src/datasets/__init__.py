@@ -1,5 +1,5 @@
-from pacs import PACS
-from vlcs import VLCS
+from src.datasets.pacs import PACS
+from src.datasets.vlcs import VLCS
 
 DATASETS = {
     "PACS": PACS,

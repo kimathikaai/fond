@@ -161,3 +161,7 @@ cython_debug/
 
 # WandB
 wandb
+
+# Data
+data
+.DS_Store
