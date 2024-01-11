@@ -85,7 +85,13 @@ def accuracy(network, loader, weights, device, dataset):
     accuracy = torchmetrics.Accuracy(
         task="multiclass",
         num_classes=num_classes,
-        average="micro",
+        average="macro",
+    ).to(device)
+
+    recall = torchmetrics.Recall(
+        task="multiclass",
+        num_classes=num_classes,
+        average="macro",
     ).to(device)
 
     network.eval()
@@ -111,11 +117,13 @@ def accuracy(network, loader, weights, device, dataset):
 
             # update metrics
             accuracy.update(p, y)
+            recall.update(p, y)
             f1_score.update(p, y)
             per_class_accuracy.update(p, y)
     network.train()
 
     compute_acc = accuracy.compute().item()
+    compute_recall = recall.compute().item()
     compute_f1 = f1_score.compute().item()
     compute_per_class_acc = per_class_accuracy.compute().cpu().numpy()
 
@@ -146,6 +154,7 @@ def accuracy(network, loader, weights, device, dataset):
 
     return (
         float(compute_acc),
+        float(compute_recall),
         float(compute_f1),
         float(overlap_class_acc),
         float(non_overlap_class_acc),
