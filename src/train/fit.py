@@ -71,7 +71,7 @@ def fit(
     #
     in_splits = []
     out_splits = []
-    for env_i, env in enumerate(dataset_name):
+    for env_i, env in enumerate(dataset):
         out, in_ = misc.split_dataset(
             env, int(len(env) * holdout_fraction), misc.seed_hash(trial_seed, env_i)
         )
