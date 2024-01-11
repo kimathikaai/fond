@@ -57,11 +57,11 @@ def fit(
         root=data_dir,
         test_envs=test_envs,
         hparams=hparams,
-        overlap=overlap_type,
+        overlap_type=overlap_type,
     )
 
     # get overlapping classes
-    hparams["C_oc"] = dataset_name.overlapping_classes
+    hparams["C_oc"] = dataset.overlapping_classes
 
     #
     # Split each env into an 'in-split' and an 'out-split'. We'll train on
