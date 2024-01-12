@@ -22,6 +22,9 @@ def main():
     n_steps = wandb.config.n_steps
     checkpoint_freq = wandb.config.checkpoint_freq
     model_checkpoint = wandb.config.model_checkpoint
+    teacher_paths = (
+        wandb.config.teacher_paths if "teacher_paths" in wandb.config else None
+    )
 
     # Access sweep configuration
     kd_algo = wandb.config.kd_algo
@@ -47,6 +50,7 @@ def main():
         n_steps=n_steps,
         checkpoint_freq=checkpoint_freq,
         model_checkpoint=model_checkpoint,
+        teacher_paths=teacher_paths,
     )
 
     wandb.finish()
@@ -76,6 +80,11 @@ if __name__ == "__main__":
 
     experiment_parameters = config["experiment_parameters"]
     for parameter in experiment_parameters:
+        if parameter == "teacher_paths":
+            for dataset in config["sweep_parameters"]["datasets"]:
+                assert dataset in experiment_parameters[parameter].keys()
+            for dataset in experiment_parameters[parameter].keys():
+                assert len(experiment_parameters[parameter][dataset].keys()) == 4
         sweep_parameters[parameter] = {"value": experiment_parameters[parameter]}
 
     sweep_config = {**config["sweep_config"], "parameters": {**sweep_parameters}}

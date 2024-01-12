@@ -3,6 +3,7 @@ import copy
 import json
 import os
 import time
+from typing import Optional, Dict
 
 import lightning as L
 import numpy as np
@@ -30,7 +31,8 @@ def fit(
     holdout_fraction: float = 0.2,
     n_steps: int = 5001,
     checkpoint_freq: int = 300,
-    model_checkpoint: dict = {},
+    model_checkpoint: Optional[Dict] = {},
+    teacher_paths: Optional[Dict] = {},
 ):
     # seed everything
     L.seed_everything(seed)
@@ -127,12 +129,32 @@ def fit(
     #
     # Setup the algorithm
     #
-    algorithm = ALGORITHMS[algorithm_name](
-        input_shape=dataset.input_shape,
-        num_classes=dataset.num_classes,
-        num_domains=len(dataset) - len(test_envs),
-        hparams=hparams,
-    )
+    if "distillation" in algorithm_name.lower():
+        assert len(test_envs) == 1
+        teacher_path = teacher_paths[dataset_name][test_envs[0]]
+        teacher_checkpoint = torch.load(teacher_path, map_location=device)
+        teacher_algorithm = FOND(
+            input_shape=teacher_checkpoint["model_input_shape"],
+            num_classes=teacher_checkpoint["model_num_classes"],
+            num_domains=teacher_checkpoint["model_num_domains"],
+            hparams=teacher_checkpoint["model_hparams"],
+        )
+        teacher_algorithm.load_state_dict(teacher_checkpoint["model_dict"])
+
+        algorithm = ALGORITHMS[algorithm_name](
+            input_shape=dataset.input_shape,
+            num_classes=dataset.num_classes,
+            num_domains=len(dataset) - len(test_envs),
+            hparams=hparams,
+            teacher=teacher_algorithm,
+        )
+    else:
+        algorithm = ALGORITHMS[algorithm_name](
+            input_shape=dataset.input_shape,
+            num_classes=dataset.num_classes,
+            num_domains=len(dataset) - len(test_envs),
+            hparams=hparams,
+        )
     algorithm.to(device)
     print(f"[info] Algorithm {algorithm_name} setup")
 
