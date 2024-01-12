@@ -57,6 +57,18 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam("error_lmbd", 1, lambda r: 10 ** r.uniform(-1, 3))
         _hparam("xda_alpha", 1, lambda r: 10 ** r.uniform(0, 1))
         _hparam("xda_beta", 1, lambda r: 10 ** r.uniform(0, 1))
+    elif (
+        algorithm == "FOND_Distillation_Separate_Projector"
+        or algorithm == "FOND_Distillation_Teacher_Projector"
+        or algorithm == "FOND_Distillation_Student_Projector"
+    ):
+        _hparam("temperature", 0.07, lambda r: 0.07 * r.uniform(0.75, 1.25))
+        _hparam("base_temperature", 0.07, lambda r: 0.07)
+        _hparam("xdom_lmbd", 1, lambda r: 10 ** r.uniform(-1, 3))
+        _hparam("error_lmbd", 1, lambda r: 10 ** r.uniform(-1, 3))
+        _hparam("xda_alpha", 1, lambda r: 10 ** r.uniform(0, 1))
+        _hparam("xda_beta", 1, lambda r: 10 ** r.uniform(0, 1))
+        _hparam("distillation_temperature", 1, lambda r: r.uniform(1, 20))
 
     # Dataset-and-algorithm-specific hparam definitions. Each block of code
     # below corresponds to exactly one hparam. Avoid nested conditionals.
