@@ -1,0 +1,10 @@
+wandb:
+  entity: "critical-ml-dg"
+  project: "fond"
+  sweep_id: "jdio791n"
+metric:
+  name: "val/acc-0"
+  goal: "max"
+script_options:
+  logging_frequency: 20
+  display_all_runs: True
