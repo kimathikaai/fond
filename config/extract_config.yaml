@@ -3,7 +3,7 @@ wandb:
   project: "fond"
   sweep_id: "jdio791n"
 metric:
-  name: "val/acc-0"
+  name: "val/nacc"
   goal: "max"
 script_options:
   logging_frequency: 20

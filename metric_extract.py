@@ -54,6 +54,7 @@ if __name__ == "__main__":
         sweep_run_metrics[run_id] = {
             metric_name: best_step_metric,
             "step_number": best_step_number,
+            "test_set_id": run.config["test_set_id"],
         }
 
     # Optionally outputs the best metric value and step for each run in sweep
@@ -62,19 +63,28 @@ if __name__ == "__main__":
         print(sweep_run_metrics)
 
     # Determine best run for sweep
-    best_run = None
-    best_run_step = None
-    best_run_metric = float("inf") if metric_goal == "min" else float("-inf")
+    best_runs_info = {}
     for key, value in sweep_run_metrics.items():
-        if metric_goal == "min" and value[metric_name] < best_run_metric:
-            best_run_metric = value[metric_name]
-            best_run_step = value["step_number"]
-            best_run = key
-        elif metric_goal == "max" and value[metric_name] > best_run_metric:
-            best_run_metric = value[metric_name]
-            best_run_step = value["step_number"]
-            best_run = key
+        run_test_id = value["test_set_id"]
+        run_metric_value = value[metric_name]
+        if (
+            (run_test_id not in best_runs_info)
+            or (
+                metric_goal == "min"
+                and run_metric_value < best_runs_info[run_test_id][metric_name]
+            )
+            or (
+                metric_goal == "max"
+                and run_metric_value > best_runs_info[run_test_id][metric_name]
+            )
+        ):
+            best_runs_info[value["test_set_id"]] = {
+                metric_name: run_metric_value,
+                "best_run_step": value["step_number"],
+                "best_run": key,
+            }
 
-    print(
-        f"[info] The best run is {best_run} with a {metric_goal} {metric_name} of {best_run_metric} at {best_run_step}"
-    )
+    for key, value in best_runs_info.items():
+        print(
+            f"[info] The best run for test id {key} is {value['best_run']} for with a {metric_name} of {value[metric_name]} at {value['best_run_step']}"
+        )
