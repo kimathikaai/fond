@@ -1,6 +1,7 @@
 import collections
 import copy
 import json
+import os
 import time
 
 import lightning as L
@@ -15,23 +16,29 @@ from src.utils.hparams import default_hparams, random_hparams, seed_hash
 
 
 def fit(
+    id: str,
     seed: int,
     trial_seed: int,
     hparams_seed: int,
     algorithm_name: str,
     dataset_name: str,
     data_dir: str,
+    log_dir: str,
     num_workers: int,
     test_envs: list,
     overlap_type: str,
     holdout_fraction: float = 0.2,
     n_steps: int = 5001,
     checkpoint_freq: int = 300,
+    model_checkpoint=None,
 ):
     # seed everything
     L.seed_everything(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+    # assert that log dir exists
+    assert os.path.isdir(log_dir), f"Log folder '{log_dir}' does not exist"
 
     # get device
     if torch.cuda.is_available():
@@ -48,7 +55,7 @@ def fit(
         hparams = random_hparams(
             algorithm_name, dataset_name, misc.seed_hash(hparams_seed, trial_seed)
         )
-    print('[info] hparams: ', hparams)
+    print("[info] hparams: ", hparams)
 
     # Add hyperparameters to config
     wandb.config.update({"hparams": hparams})
@@ -63,7 +70,7 @@ def fit(
 
     # get overlapping classes
     hparams["C_oc"] = dataset.overlapping_classes
-    print(f'[info] Loaded {dataset_name}')
+    print(f"[info] Loaded {dataset_name}")
 
     #
     # Split each env into an 'in-split' and an 'out-split'. We'll train on
@@ -112,7 +119,7 @@ def fit(
 
     eval_loader_names = ["env{}_in".format(i) for i in range(len(in_splits))]
     eval_loader_names += ["env{}_out".format(i) for i in range(len(out_splits))]
-    print(f'[info] Created data loaders:  {eval_loader_names}')
+    print(f"[info] Created data loaders:  {eval_loader_names}")
 
     train_minibatches_iterator = zip(*train_loaders)
     steps_per_epoch = min([len(env) / hparams["batch_size"] for env, _ in in_splits])
@@ -127,13 +134,17 @@ def fit(
         hparams=hparams,
     )
     algorithm.to(device)
-    print(f'[info] Algorithm {algorithm_name} setup')
+    print(f"[info] Algorithm {algorithm_name} setup")
 
     #
     # Training loop
     #
     print(f"[info] Begining training loop, with {steps_per_epoch} steps per epoch")
     checkpoint_vals = collections.defaultdict(lambda: [])
+
+    # track the model checkpoint value
+    best_model_checkpoint_value = None
+    best_model_checkpoint_path = ""
 
     for step in range(n_steps):
         step_start_time = time.time()
@@ -155,7 +166,7 @@ def fit(
             results_dict = {
                 key: {
                     _key: []
-                    for _key in ["acc", "f1", "nacc", "oacc", 'recall']
+                    for _key in ["acc", "f1", "nacc", "oacc", "recall"]
                     + [f"acc-{i}" for i in range(dataset.num_classes)]
                 }
                 for key in ["train", "val", "test", "other"]
@@ -212,5 +223,53 @@ def fit(
                             "epoch": step / steps_per_epoch,
                         }
                     )
+
+            # Save model checkpoint
+            if model_checkpoint is not None:
+                # get checkpoint parameters
+                checkpoint_metric = model_checkpoint["metric"].split("/")
+                maximize = model_checkpoint["maximize"]
+                stage, metric = checkpoint_metric[0], checkpoint_metric[1]
+
+                # get current value
+                current_model_checkpoint_value = np.nanmean(results_dict[stage][metric])
+                ckpt_path = os.path.join(log_dir, f"{id}_model_step{step}.ckpt")
+
+                if best_model_checkpoint_value == None:
+                    best_model_checkpoint_value = current_model_checkpoint_value
+                    best_model_checkpoint_path = ckpt_path
+                    torch.save(algorithm, ckpt_path)
+                elif (
+                    best_model_checkpoint_value < current_model_checkpoint_value
+                ) and maximize:
+                    torch.save(algorithm, ckpt_path)
+                    # remove previous checkpoint
+                    os.remove(best_model_checkpoint_path)
+                    # update
+                    print(
+                        "[info] Updated {} from {} to {}".format(
+                            checkpoint_metric,
+                            best_model_checkpoint_value,
+                            current_model_checkpoint_value,
+                        )
+                    )
+                    best_model_checkpoint_value = current_model_checkpoint_value
+                    best_model_checkpoint_path = ckpt_path
+                elif (
+                    best_model_checkpoint_value > current_model_checkpoint_value
+                ) and not maximize:
+                    torch.save(algorithm, ckpt_path)
+                    # remove previous checkpoint
+                    os.remove(best_model_checkpoint_path)
+                    # update
+                    print(
+                        "[info] Updated {} from {} to {}".format(
+                            checkpoint_metric,
+                            best_model_checkpoint_value,
+                            current_model_checkpoint_value,
+                        )
+                    )
+                    best_model_checkpoint_value = current_model_checkpoint_value
+                    best_model_checkpoint_path = ckpt_path
 
             checkpoint_vals = collections.defaultdict(lambda: [])

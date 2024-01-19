@@ -16,10 +16,12 @@ def main():
     # Access experiment parameters
     overall_seed = wandb.config.overall_seed
     data_dir = wandb.config.data_dir
+    log_dir = wandb.config.log_dir
     num_workers = wandb.config.num_workers
     holdout_fraction = wandb.config.holdout_fraction
     n_steps = wandb.config.n_steps
     checkpoint_freq = wandb.config.checkpoint_freq
+    model_checkpoint = wandb.config.model_checkpoint
 
     # Access sweep configuration
     kd_algo = wandb.config.kd_algo
@@ -30,18 +32,21 @@ def main():
     overlap = wandb.config.overlap
 
     fit(
+        id="{}-{}-{}".format(run.project, run.sweep_id, run.id),
         seed=overall_seed,
         trial_seed=trial_id,
         hparams_seed=hparam_id,
         algorithm_name=kd_algo,
         dataset_name=dataset,
         data_dir=data_dir,
+        log_dir=log_dir,
         num_workers=num_workers,
         test_envs=[test_set_id],
         overlap_type=overlap,
         holdout_fraction=holdout_fraction,
         n_steps=n_steps,
         checkpoint_freq=checkpoint_freq,
+        model_checkpoint=model_checkpoint,
     )
 
     wandb.finish()
