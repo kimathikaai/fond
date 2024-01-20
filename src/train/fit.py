@@ -148,7 +148,11 @@ def fit(
     # get checkpoint parameters
     checkpoint_metric = model_checkpoint["metric"].split("/")
     stage, metric = checkpoint_metric[0], checkpoint_metric[1]
-    wandb.define_metric(stage + "/" + metric, step_metric="step", summary="max")
+    wandb.define_metric(
+        stage + "/" + metric,
+        step_metric="step",
+        summary="max" if model_checkpoint["maximize"] else "min",
+    )
 
     for step in range(n_steps):
         step_start_time = time.time()
