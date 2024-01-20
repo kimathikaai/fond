@@ -1,8 +1,8 @@
 
 sweep_config: 
   metric:
-    name: "val_loss"
-    goal: "minimize"
+    name: "val/nacc"
+    goal: "maximize"
   method: "grid"
 sweep_parameters:
   kd_algos: 
