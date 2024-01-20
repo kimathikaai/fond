@@ -30,7 +30,7 @@ def fit(
     holdout_fraction: float = 0.2,
     n_steps: int = 5001,
     checkpoint_freq: int = 300,
-    model_checkpoint=None,
+    model_checkpoint: dict = {},
 ):
     # seed everything
     L.seed_everything(seed)
@@ -145,6 +145,10 @@ def fit(
     # track the model checkpoint value
     best_model_checkpoint_value = None
     best_model_checkpoint_path = ""
+    # get checkpoint parameters
+    checkpoint_metric = model_checkpoint["metric"].split("/")
+    stage, metric = checkpoint_metric[0], checkpoint_metric[1]
+    wandb.define_metric(stage + "/" + metric, step_metric="step", summary="maximize")
 
     for step in range(n_steps):
         step_start_time = time.time()
