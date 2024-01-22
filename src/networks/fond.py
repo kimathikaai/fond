@@ -229,3 +229,146 @@ class FONDBase(AbstractXDom):
 class FOND(FONDBase):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(FOND, self).__init__(input_shape, num_classes, num_domains, hparams)
+
+
+class FOND_NC(FONDBase):
+    """
+    Based on FOND however we replace the fairness loss with the domain-linked
+    classification loss
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(FOND_NC, self).__init__(input_shape, num_classes, num_domains, hparams)
+
+    def update(self, minibatches, unlabeled=None):
+        values = self.preprocess(minibatches)
+
+        domains = torch.cat(values["domains"])
+        targets = torch.cat(values["targets"])
+        classifs = torch.cat(values["classifs"])
+        projections = torch.cat(values["projections"])
+
+        masks = self.get_masks(Y=targets, D=domains)
+
+        alpha = (
+            ~masks["diff_domain_same_class_mask"]
+            + masks["diff_domain_same_class_mask"] * self.xda_alpha
+        )
+
+        beta = (
+            ~masks["same_domain_diff_class_mask"]
+            + masks["same_domain_diff_class_mask"] * self.xda_beta
+        )
+
+        xdom_loss, mean_positives_per_sample, num_zero_positives = self.supcon_loss(
+            projections=projections,
+            positive_mask=masks["same_class_mask"] * masks["self_mask"],
+            negative_mask=masks["self_mask"],
+            alpha=alpha,
+            beta=beta,
+        )
+
+        oc_class_loss = F.cross_entropy(
+            classifs, targets, weight=self.oc_weight.to(targets.device)
+        )
+        noc_class_loss = F.cross_entropy(
+            classifs, targets, weight=self.noc_weight.to(targets.device)
+        )
+        error_loss = oc_class_loss - noc_class_loss
+        if torch.isnan(error_loss):
+            error_loss = torch.tensor(0).to(targets.device)
+        class_loss = F.cross_entropy(classifs, targets)
+        if torch.isnan(noc_class_loss):
+            noc_class_loss = torch.tensor(0).to(targets.device)
+
+        loss = (
+            class_loss + self.xdom_lmbd * xdom_loss + self.error_lmbd * noc_class_loss
+        )
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return {
+            "loss": loss.item(),
+            "class_loss": class_loss.item(),
+            "xdom_loss": xdom_loss.item(),
+            "error_loss": error_loss.item(),
+            "noc_class_loss": noc_class_loss.item(),
+            "mean_p": mean_positives_per_sample.item(),
+            "zero_p": num_zero_positives.item(),
+        }
+
+
+# FOND with a non overlapping class loss, but no overall class loss
+class FOND_N(FONDBase):
+    """
+    Guiding Question: Why optimize for domain-shared class accuracy if
+    we are only interested in domain-linked classes? Does including domain-shared
+    classes for the contrastive objective only improve domain-linked class
+    performance?
+
+    Based on FOND however we keep the domain-shared and domain-linked
+    contrastive loss and only optimize for the domain-linked classification
+    loss.
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(FOND_N, self).__init__(input_shape, num_classes, num_domains, hparams)
+
+    def update(self, minibatches, unlabeled=None):
+        values = self.preprocess(minibatches)
+
+        domains = torch.cat(values["domains"])
+        targets = torch.cat(values["targets"])
+        classifs = torch.cat(values["classifs"])
+        projections = torch.cat(values["projections"])
+
+        masks = self.get_masks(Y=targets, D=domains)
+
+        alpha = (
+            ~masks["diff_domain_same_class_mask"]
+            + masks["diff_domain_same_class_mask"] * self.xda_alpha
+        )
+
+        beta = (
+            ~masks["same_domain_diff_class_mask"]
+            + masks["same_domain_diff_class_mask"] * self.xda_beta
+        )
+
+        xdom_loss, mean_positives_per_sample, num_zero_positives = self.supcon_loss(
+            projections=projections,
+            positive_mask=masks["same_class_mask"] * masks["self_mask"],
+            negative_mask=masks["self_mask"],
+            alpha=alpha,
+            beta=beta,
+        )
+
+        oc_class_loss = F.cross_entropy(
+            classifs, targets, weight=self.oc_weight.to(targets.device)
+        )
+        noc_class_loss = F.cross_entropy(
+            classifs, targets, weight=self.noc_weight.to(targets.device)
+        )
+        error_loss = oc_class_loss - noc_class_loss
+        if torch.isnan(error_loss):
+            error_loss = torch.tensor(0).to(targets.device)
+        class_loss = F.cross_entropy(classifs, targets)
+        if torch.isnan(noc_class_loss):
+            noc_class_loss = torch.tensor(0).to(targets.device)
+
+        loss = self.xdom_lmbd * xdom_loss + noc_class_loss
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return {
+            "loss": loss.item(),
+            "class_loss": class_loss.item(),
+            "xdom_loss": xdom_loss.item(),
+            "error_loss": error_loss.item(),
+            "noc_class_loss": noc_class_loss.item(),
+            "mean_p": mean_positives_per_sample.item(),
+            "zero_p": num_zero_positives.item(),
+        }

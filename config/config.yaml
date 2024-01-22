@@ -6,12 +6,17 @@ sweep_config:
   method: "grid"
 sweep_parameters:
   kd_algos: 
+    - "ERM"
     - "FOND"
+    - "FOND_NC"
+    - "FOND_N"
   datasets:
     - "PACS"
   overlaps:
     - "high"
     - "low"
+    - "low_linked_only"
+    - "high_linked_only"
   n_trials: 3
   n_hparams: 5
 experiment_parameters:
