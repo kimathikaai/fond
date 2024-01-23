@@ -1,0 +1,14 @@
+wandb:
+  entity: "critical-ml-dg"
+  project: "fond-checkpoints"
+  sweep_ids: ["i4quzpc4", "5ewn6jqq"]
+filtering_criteria:
+  kd_algo: FOND
+separating_criteria:
+  - "dataset"
+  - "test_set_id"
+metric:
+  name: "val/nacc"
+  goal: "max"
+script_options:
+  display_all_runs: True
