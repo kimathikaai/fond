@@ -59,7 +59,7 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     load_dotenv()
-    parser.add_argument("--config", type=str, default="config/config.yaml")
+    parser.add_argument("--config", type=str, default="config/sweep_config.yaml")
     args = parser.parse_args()
     with open(args.config, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
