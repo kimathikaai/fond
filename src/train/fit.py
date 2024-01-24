@@ -133,7 +133,7 @@ def fit(
         assert len(test_envs) == 1
         teacher_path = teacher_paths[dataset_name][test_envs[0]]
         teacher_checkpoint = torch.load(teacher_path, map_location=device)
-        teacher_algorithm = FOND(
+        teacher_algorithm = ALGORITHMS['FOND'](
             input_shape=teacher_checkpoint["model_input_shape"],
             num_classes=teacher_checkpoint["model_num_classes"],
             num_domains=teacher_checkpoint["model_num_domains"],
