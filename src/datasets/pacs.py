@@ -16,7 +16,6 @@ class PACS(MultipleEnvironmentImageFolder):
         "high_linked_only": [[0, 1], [], [6]],
     }
 
-    # overlap_type
     def __init__(
         self,
         root: str,

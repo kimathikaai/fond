@@ -11,6 +11,7 @@ import gdown
 import json
 import os
 import urllib
+from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
 
 
 # utils #######################################################################
@@ -134,3 +135,4 @@ if __name__ == "__main__":
     download_pacs(args.data_dir)
     download_office_home(args.data_dir)
     download_vlcs(args.data_dir)
+    Camelyon17Dataset(root_dir=args.data_dir, download=True)
