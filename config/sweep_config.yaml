@@ -15,6 +15,8 @@ sweep_parameters:
     - "FOND_Distillation_Student_Projector"
   datasets:
     - "PACS"
+    - "VLCS"
+    - "OfficeHome"
   overlaps:
     - "high"
     - "low"
