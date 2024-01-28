@@ -166,3 +166,4 @@ wandb
 data
 .DS_Store
 teacher_models
+logs
