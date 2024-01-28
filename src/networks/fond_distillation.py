@@ -1,10 +1,14 @@
+import torch
+import torch.nn.functional as F
+
 from src.networks.fond import FONDBase
+
 
 class FOND_Distillation(FONDBase):
     def __init__(self, input_shape, num_classes, num_domains, hparams, teacher):
         super(FOND_Distillation, self).__init__(
-                    input_shape, num_classes, num_domains, hparams
-                )
+            input_shape, num_classes, num_domains, hparams
+        )
         self.teacher_setting = None
         self.distillation_temperature = hparams["distillation_temperature"]
         self.teacher = teacher
@@ -26,14 +30,26 @@ class FOND_Distillation(FONDBase):
         features_teacher = [self.teacher.featurizer(xi) for xi, _ in minibatches]
 
         if self.teacher_setting == "separate_projector":
-            projections_student = [F.normalize(self.projector(fi)) for fi in features_student]
-            projections_teacher = [F.normalize(self.teacher.projector(fi)) for fi in features_teacher]
+            projections_student = [
+                F.normalize(self.projector(fi)) for fi in features_student
+            ]
+            projections_teacher = [
+                F.normalize(self.teacher.projector(fi)) for fi in features_teacher
+            ]
         elif self.teacher_setting == "teacher_projector":
-            projections_student = [F.normalize(self.teacher.projector(fi)) for fi in features_student]
-            projections_teacher = [F.normalize(self.teacher.projector(fi)) for fi in features_teacher]
+            projections_student = [
+                F.normalize(self.teacher.projector(fi)) for fi in features_student
+            ]
+            projections_teacher = [
+                F.normalize(self.teacher.projector(fi)) for fi in features_teacher
+            ]
         elif self.teacher_setting == "student_projector":
-            projections_student = [F.normalize(self.projector(fi)) for fi in features_student]
-            projections_teacher = [F.normalize(self.projector(fi)) for fi in features_teacher]
+            projections_student = [
+                F.normalize(self.projector(fi)) for fi in features_student
+            ]
+            projections_teacher = [
+                F.normalize(self.projector(fi)) for fi in features_teacher
+            ]
         else:
             raise ValueError("Invalid teacher setting")
 
@@ -76,8 +92,12 @@ class FOND_Distillation(FONDBase):
         projections_teacher = torch.cat(values["projections_teacher"])
 
         noc_mask = self.noc_weight.to(targets.device)[targets].type(torch.bool)
-        soft_projections_student = F.softmax(projections_student[noc_mask]/self.distillation_temperature)
-        soft_projections_teacher = F.softmax(projections_teacher[noc_mask]/self.distillation_temperature)
+        soft_projections_student = F.softmax(
+            projections_student[noc_mask] / self.distillation_temperature
+        )
+        soft_projections_teacher = F.softmax(
+            projections_teacher[noc_mask] / self.distillation_temperature
+        )
 
         teacher_loss = F.kl_div(soft_projections_student, soft_projections_teacher)
 
@@ -107,14 +127,11 @@ class FOND_Distillation(FONDBase):
         if torch.isnan(teacher_loss):
             teacher_loss = torch.tensor(0).to(targets.device)
 
-        loss = (
-            class_loss + teacher_loss + self.xdom_lmbd * xdom_loss
-        )
+        loss = class_loss + teacher_loss + self.xdom_lmbd * xdom_loss
 
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
 
         return {
             "loss": loss.item(),
@@ -124,25 +141,27 @@ class FOND_Distillation(FONDBase):
             "mean_p": mean_positives_per_sample.item(),
             "zero_p": num_zero_positives.item(),
         }
-        
+
+
 class FOND_Distillation_Separate_Projector(FOND_Distillation):
     def __init__(self, input_shape, num_classes, num_domains, hparams, teacher):
         super(FOND_Distillation_Separate_Projector, self).__init__(
-                    input_shape, num_classes, num_domains, hparams, teacher
-                )
+            input_shape, num_classes, num_domains, hparams, teacher
+        )
         self.teacher_setting = "separate_projector"
+
 
 class FOND_Distillation_Teacher_Projector(FOND_Distillation):
     def __init__(self, input_shape, num_classes, num_domains, hparams, teacher):
         super(FOND_Distillation_Teacher_Projector, self).__init__(
-                    input_shape, num_classes, num_domains, hparams, teacher
-                )
+            input_shape, num_classes, num_domains, hparams, teacher
+        )
         self.teacher_setting = "teacher_projector"
+
 
 class FOND_Distillation_Student_Projector(FOND_Distillation):
     def __init__(self, input_shape, num_classes, num_domains, hparams, teacher):
         super(FOND_Distillation_Student_Projector, self).__init__(
-                    input_shape, num_classes, num_domains, hparams, teacher
-                )
+            input_shape, num_classes, num_domains, hparams, teacher
+        )
         self.teacher_setting = "student_projector"
-

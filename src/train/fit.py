@@ -131,15 +131,8 @@ def fit(
     #
     if "distillation" in algorithm_name.lower():
         assert len(test_envs) == 1
-        teacher_path = teacher_paths[dataset_name][test_envs[0]]
-        teacher_checkpoint = torch.load(teacher_path, map_location=device)
-        teacher_algorithm = ALGORITHMS['FOND'](
-            input_shape=teacher_checkpoint["model_input_shape"],
-            num_classes=teacher_checkpoint["model_num_classes"],
-            num_domains=teacher_checkpoint["model_num_domains"],
-            hparams=teacher_checkpoint["model_hparams"],
-        )
-        teacher_algorithm.load_state_dict(teacher_checkpoint["model_dict"])
+        teacher_path = teacher_paths[dataset_name][str(test_envs[0])]
+        teacher_algorithm = torch.load(teacher_path, map_location=device)
 
         algorithm = ALGORITHMS[algorithm_name](
             input_shape=dataset.input_shape,
