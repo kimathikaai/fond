@@ -1,5 +1,7 @@
+from typing import Any, Dict, List, Tuple
+
 import wandb
-from typing import List, Dict, Any, Tuple
+from tqdm import tqdm
 
 
 def get_project_runs(
@@ -13,7 +15,7 @@ def get_project_runs(
     unique_datasets = []
     for sweep_id in sweep_ids:
         sweep = api_conn.sweep(f"{project_name}/{sweep_id}")
-        for run in sweep.runs:
+        for run in tqdm(sweep.runs):
             invalid_run = False
             # remove runs that don't match all of the filteria criteria
             for filtering_key, filtering_value in filtering_criteria.items():
@@ -29,20 +31,20 @@ def get_project_runs(
 
 
 def find_best_steps(
-    runs: List[wandb.run], metric_name: str, metric_goal: str, logging_freq: int = 20
+    runs: List[wandb.run],
+    val_metric: str,
+    test_metric: str,
+    metric_goal: str,
 ):
     assert metric_goal in ["min", "max"]
 
     best_step_info = {}
-    for i, run in enumerate(runs):
-        if i != 0 and i % logging_freq == 0:
-            print(f"Runs Processed: {i}")
-
-        run_history = run.scan_history(keys=[metric_name, "step"])
+    for run in tqdm(runs):
+        run_history = run.scan_history(keys=[val_metric, "step"])
         best_metric = float("inf") if metric_goal == "min" else float("-inf")
         best_step = None
         for row in run_history:
-            step_metric = row[metric_name]
+            step_metric = row[val_metric]
             if metric_goal == "min" and step_metric < best_metric:
                 best_metric = step_metric
                 best_step = row["step"]
@@ -51,7 +53,7 @@ def find_best_steps(
                 best_step = row["step"]
 
         best_step_info[run] = {
-            metric_name: best_metric,
+            val_metric: best_metric,
             "step_number": best_step,
         }
     return best_step_info
