@@ -1,9 +1,10 @@
 import collections
 import copy
 import json
+import logging
 import os
 import time
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 import lightning as L
 import numpy as np
@@ -71,12 +72,12 @@ def fit(
         hparams=hparams,
         overlap_type=overlap_type,
         num_classes=num_classes,
-        num_domain_linked_classes=num_domain_linked_classes
+        num_domain_linked_classes=num_domain_linked_classes,
     )
 
     # get overlapping classes
     hparams["C_oc"] = dataset.overlapping_classes
-    print(f"[info] Loaded {dataset_name}")
+    logging.info(f"Loaded {dataset_name}")
 
     #
     # Split each env into an 'in-split' and an 'out-split'. We'll train on

@@ -1,5 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
+import logging
 import os
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -89,6 +90,9 @@ class DomainBedImageFolder(ImageFolder):
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
         remove_classes: List[int] = [],
+        allowed_classes: List[int] = [],
+        is_test_env: Optional[bool] = None,
+        env_name: Optional[str] = None,
     ):
         super().__init__(root, transform, target_transform)
 
@@ -96,6 +100,10 @@ class DomainBedImageFolder(ImageFolder):
         old_samples = self.samples
         self.samples = []
         self.targets = []
+        self.is_test_env = is_test_env
+        self.allowed_classes = allowed_classes
+        self.remove_classes = remove_classes
+        self.env_name = env_name
         for sample in old_samples:
             _, target = sample
 
@@ -104,9 +112,13 @@ class DomainBedImageFolder(ImageFolder):
                 self.targets.append(target)
 
         self.imgs = self.samples
+        self.classes = list(set(self.targets))
 
     def __len__(self) -> int:
         return len(self.samples)
+
+    def __str__(self):
+        return f"{self.env_name}: is_test_env={self.is_test_env}, allowed_classes={self.allowed_classes}"
 
 
 def get_overlapping_classes(
@@ -256,6 +268,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
         self.overlapping_classes = get_overlapping_classes(
             domain_class_filter, self.num_classes
         )
+        logging.info(f"Overlapping classes: {self.overlapping_classes}")
 
         # Dynamically associate a filter with a domain except for test_envs[0]
         num_filters = len(domain_class_filter)
@@ -306,24 +319,19 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
                 remove_classes = list(all_classes - set(filter))
 
                 env_dataset = DomainBedImageFolder(
-                    path, transform=env_transform, remove_classes=remove_classes
+                    path, transform=env_transform, remove_classes=remove_classes,
+                    is_test_env=False, allowed_classes=filter
                 )
-
-                env_dataset.is_test_env = False
-                env_dataset.allowed_classes = filter
-                env_dataset.remove_classes = remove_classes
             else:
                 remove_classes = list(range(self.num_classes, len(all_classes)))
                 env_dataset = DomainBedImageFolder(
-                    path, transform=env_transform, remove_classes=remove_classes
+                    path, transform=env_transform, remove_classes=remove_classes,
+                    is_test_env=True, allowed_classes=list(range(self.num_classes)),
+                    env_name=environment
                 )
 
-                env_dataset.is_test_env = True
-                env_dataset.allowed_classes = list(range(self.num_classes))
-                env_dataset.remove_classes = remove_classes
-
-            env_dataset.env_name = environment
             # print(f"\n[info] environment: {env_dataset.env_name}, classes: {env_dataset.allowed_classes}, is_test: {env_dataset.is_test_env}")
+            logging.info(f'Created domain -> {env_dataset}')
             self.datasets.append(env_dataset)
 
         self.input_shape = (
