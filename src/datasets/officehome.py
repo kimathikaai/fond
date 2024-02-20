@@ -9,7 +9,6 @@ from src.utils.domain_creation import create_domains
 class OfficeHome(MultipleEnvironmentImageFolder):
     CHECKPOINT_FREQ = 300
     ENVIRONMENTS = sorted(["A", "C", "P", "R"])
-    NUM_CLASSES = 65
     OVERLAP_CONFIG = {
         "0": [list(range(0, 22)), list(range(22, 44)), list(range(44, 65))],
         "low": [list(range(0, 30)), list(range(14, 44)), list(range(35, 65))],  # 25/65
@@ -48,6 +47,7 @@ class OfficeHome(MultipleEnvironmentImageFolder):
                 f"Using dynamic class distributions: num_classes={num_classes}, num_linked={num_domain_linked_classes}, num_train_domains={self._num_source_domains}"
             )
             assert num_classes <= self._num_classes
+            self._num_classes = num_classes
             domain_class_filter = create_domains(
                 num_classes=num_classes,
                 num_linked=num_domain_linked_classes,
@@ -60,8 +60,5 @@ class OfficeHome(MultipleEnvironmentImageFolder):
             hparams["data_augmentation"],
             hparams,
             domain_class_filter=domain_class_filter,
+            num_classes=self._num_classes
         )
-
-        # change the number of total classes if using dynamic class distributions
-        if overlap_type is None:
-            self.num_classes = num_classes

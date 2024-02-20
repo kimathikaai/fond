@@ -236,7 +236,8 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
         test_envs,
         augment,
         hparams,
-        domain_class_filter: List[List[int]] = None,
+        domain_class_filter: List[List[int]],
+        num_classes=None,
     ):
         super().__init__()
         environments = [f.name for f in os.scandir(root) if f.is_dir()]
@@ -248,12 +249,9 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
         self.idx_to_class = self.get_idx_to_class(
             os.path.join(root, environments[test_envs[0]])
         )
-        self.num_classes = len(self.idx_to_class)
-
-        if domain_class_filter is None:
-            domain_class_filter = [
-                list(range(self.num_classes)) for _ in range(num_envs - 1)
-            ]
+        self.num_classes = (
+            len(self.idx_to_class) if num_classes is None else num_classes
+        )
 
         self.overlapping_classes = get_overlapping_classes(
             domain_class_filter, self.num_classes
@@ -300,11 +298,11 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
                 env_transform = transform
 
             # setup class filtering
+            all_classes = set(list(self.idx_to_class.keys()))
             if i not in test_envs:
                 filter = domain_class_filter[shift_filter.pop()]
                 if filter == []:
                     continue
-                all_classes = set(list(self.idx_to_class.keys()))
                 remove_classes = list(all_classes - set(filter))
 
                 env_dataset = DomainBedImageFolder(
@@ -315,11 +313,14 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
                 env_dataset.allowed_classes = filter
                 env_dataset.remove_classes = remove_classes
             else:
-                env_dataset = DomainBedImageFolder(path, transform=env_transform)
+                remove_classes = list(range(self.num_classes, len(all_classes)))
+                env_dataset = DomainBedImageFolder(
+                    path, transform=env_transform, remove_classes=remove_classes
+                )
 
                 env_dataset.is_test_env = True
                 env_dataset.allowed_classes = list(range(self.num_classes))
-                env_dataset.remove_classes = []
+                env_dataset.remove_classes = remove_classes
 
             env_dataset.env_name = environment
             # print(f"\n[info] environment: {env_dataset.env_name}, classes: {env_dataset.allowed_classes}, is_test: {env_dataset.is_test_env}")
