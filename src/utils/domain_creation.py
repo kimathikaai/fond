@@ -1,5 +1,6 @@
 import math
 from typing import List
+import logging
 
 
 def create_domains(
@@ -15,11 +16,11 @@ def create_domains(
         num_linked: number of classes that are linked to an individual domain
         num_train_domains: number of different training domains
     """
-    assert num_linked < num_classes
+    assert num_linked <= num_classes
     domain_shared = [i for i in range(num_linked, num_classes)]
     domain_linked = [i for i in range(num_linked)]
-    print(f"Domain-shared classes: {domain_shared}")
-    print(f"Domain-linked classes: {domain_linked}")
+    logging.info(f"Domain-shared classes: {domain_shared}")
+    logging.info(f"Domain-linked classes: {domain_linked}")
     # domains = [domain_shared.copy() for i in range(num_train_domains)]
     domains = [[] for i in range(num_train_domains)]
 
@@ -28,8 +29,8 @@ def create_domains(
     # other domains contain domain-shared only
     domains[1:] = [domain_shared.copy() for i in range(1, num_train_domains)]
 
-    print("domains[0]: ", domains[0])
-    print("domains[1:]: ", domains[1:])
+    logging.info("domains[0]: ", domains[0])
+    logging.info("domains[1:]: ", domains[1:])
 
     return domains
 
@@ -71,6 +72,8 @@ def create_domains_2(
 if __name__ == "__main__":
     # Testing
     create_domains(num_classes=10, num_linked=5, num_train_domains=3)
+    # Testing domain linked only
+    create_domains(num_classes=10, num_linked=10, num_train_domains=3)
 
     # Testing same classes with different overlap
     domains = create_domains_1(num_classes=10, num_linked=3, num_domains=4)
