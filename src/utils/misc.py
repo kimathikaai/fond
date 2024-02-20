@@ -1,4 +1,5 @@
 import hashlib
+import logging
 from collections import Counter
 
 import numpy as np
@@ -237,3 +238,14 @@ class FastDataLoader:
 
     def __len__(self):
         return self._length
+
+
+def config_logging():
+    """
+    Reusable code for formatting the logger
+    """
+    logging.basicConfig(
+        format="%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(funcName)s:%(lineno)d] %(message)s",
+        datefmt="%Y-%m-%d:%H:%M:%S",
+        level=logging.INFO,
+    )

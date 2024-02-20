@@ -33,6 +33,8 @@ def fit(
     checkpoint_freq: int = 300,
     model_checkpoint: Optional[Dict] = {},
     teacher_paths: Optional[Dict] = {},
+    num_domain_linked_classes: Optional[int] = None,
+    num_classes: Optional[int] = None,
 ):
     # seed everything
     L.seed_everything(seed)
@@ -68,6 +70,8 @@ def fit(
         test_envs=test_envs,
         hparams=hparams,
         overlap_type=overlap_type,
+        num_classes=num_classes,
+        num_domain_linked_classes=num_domain_linked_classes
     )
 
     # get overlapping classes
