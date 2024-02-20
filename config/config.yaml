@@ -11,7 +11,8 @@ sweep_parameters:
   num_classes:
     - 5
     - 25
-  overlaps: Null
+  overlaps: 
+    - Null
   n_trials: 3
   n_hparams: 5
 experiment_parameters:
@@ -26,17 +27,6 @@ experiment_parameters:
   model_checkpoint:
     metric: "val/nacc"
     maximize: True
-  teacher_paths: 
-    PACS:
-      0: "teacher_models/model_step0.pkl"
-      1: "teacher_models/model_step1.pkl"
-      2: "teacher_models/model_step0.pkl"
-      3: "teacher_models/model_step1.pkl"
-    VLCS:
-      0: "teacher_models/model_step0.pkl"
-      1: "teacher_models/model_step1.pkl"
-      2: "teacher_models/model_step0.pkl"
-      3: "teacher_models/model_step1.pkl"
 wandb:
   entity: "critical-ml-dg"
   project: "fond-teacher"

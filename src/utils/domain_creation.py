@@ -29,8 +29,8 @@ def create_domains(
     # other domains contain domain-shared only
     domains[1:] = [domain_shared.copy() for i in range(1, num_train_domains)]
 
-    logging.info("domains[0]: ", domains[0])
-    logging.info("domains[1:]: ", domains[1:])
+    logging.info(f"domains[0]: {domains[0]}")
+    logging.info(f"domains[1:]: {domains[1:]}")
 
     return domains
 
