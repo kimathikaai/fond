@@ -320,7 +320,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
                 env_dataset = DomainBedImageFolder(
                     path, transform=env_transform, remove_classes=remove_classes,
-                    is_test_env=False, allowed_classes=filter
+                    is_test_env=False, allowed_classes=filter, env_name=environment
                 )
             else:
                 remove_classes = list(range(self.num_classes, len(all_classes)))
