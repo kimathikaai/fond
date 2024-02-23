@@ -7,8 +7,8 @@ import yaml
 from dotenv import load_dotenv
 from lightning.pytorch.callbacks import checkpoint
 
-from datasets import DATASETS
-from networks import ALGORITHMS
+from src.datasets import DATASETS
+from src.networks import ALGORITHMS
 from src.train.fit import fit
 from src.utils.hparams import random_hparams, seed_hash
 from src.utils.misc import config_logging
