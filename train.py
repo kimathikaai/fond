@@ -77,7 +77,7 @@ if __name__ == "__main__":
     fit(
         id=id,
         seed=args.overall_seed,
-        trial_seed=args.trial_seed,
+        trial_seed=args.trial_id,
         hparams_seed=args.hparams_seed,
         algorithm_name=args.algorithm,
         dataset_name=args.dataset,
