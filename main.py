@@ -29,7 +29,7 @@ def main():
     )
 
     # Access sweep configuration
-    kd_algo = wandb.config.kd_algo
+    algo = wandb.config.algo
     dataset = wandb.config.dataset
     test_set_id = wandb.config.test_set_id
     hparam_id = wandb.config.hparam_id
@@ -41,7 +41,7 @@ def main():
         seed=overall_seed,
         trial_seed=trial_id,
         hparams_seed=hparam_id,
-        algorithm_name=kd_algo,
+        algorithm_name=algo,
         dataset_name=dataset,
         data_dir=data_dir,
         log_dir=log_dir,
@@ -63,46 +63,42 @@ def main():
 if __name__ == "__main__":
     # load enviroment variables
     load_dotenv()
+
     # load cmd line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="config/sweep_config.yaml")
-    args = parser.parse_args()
-    with open(args.config, "r") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-
+    parser.add_argument("--wandb_entity", type=str, required=True)
+    parser.add_argument("--wandb_project", type=str, required=True)
+    parser.add_argument("--config_file", type=str, default="config/sweep_config.yaml")
+    parser.add_argument("--sweep_id", type=str, default=None)
+    
     # format logger
     config_logging()
 
-    # Format parameters to match sweep parameter formatting
-    sweep_parameters = {
-        "kd_algo": {"values": config["sweep_parameters"]["kd_algos"]},
-        "dataset": {"values": config["sweep_parameters"]["datasets"]},
-        "overlap": {"values": config["sweep_parameters"]["overlaps"]},
-        "num_classes": {"values": config["sweep_parameters"]["num_classes"]},
-        "test_set_id": {"values": [i for i in range(NUM_TEST_SETS)]},
-        "hparam_id": {
-            "values": [i for i in range(config["sweep_parameters"]["n_hparams"])]
-        },
-        "trial_id": {
-            "values": [i for i in range(config["sweep_parameters"]["n_trials"])]
-        },
-    }
+    args = parser.parse_args()
+    sweep_id = args.sweep_id
+    config_file = args.config_file
+    wandb_entity = args.wandb_entity
+    wandb_project = args.wandb_project
 
-    experiment_parameters = config["experiment_parameters"]
-    for parameter in experiment_parameters:
-        if parameter == "teacher_paths":
-            for dataset in config["sweep_parameters"]["datasets"]:
-                assert dataset in experiment_parameters[parameter].keys()
-            for dataset in experiment_parameters[parameter].keys():
-                assert len(experiment_parameters[parameter][dataset].keys()) == 4
-        sweep_parameters[parameter] = {"value": experiment_parameters[parameter]}
+    if sweep_id is None:
+        with open(config_file, "r") as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        sweep_id = wandb.sweep(
+            sweep=config,
+            entity=wandb_entity,
+            project=wandb_project,
+        )
 
-    sweep_config = {**config["sweep_config"], "parameters": {**sweep_parameters}}
-
-    sweep_id = wandb.sweep(
-        sweep=sweep_config,
-        entity=config["wandb"]["entity"],
-        project=config["wandb"]["project"],
+    wandb.agent(
+        sweep_id, 
+        function=main,
+        entity=wandb_entity,
+        project=wandb_project
     )
 
-    wandb.agent(sweep_id, function=main)
+    
+
+    
+
+    
+

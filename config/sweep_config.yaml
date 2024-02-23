@@ -1,49 +1,69 @@
-
-sweep_config: 
-  metric:
-    name: "val/nacc"
-    goal: "maximize"
-  method: "grid"
-sweep_parameters:
-  kd_algos: 
-    - "ERM"
-    - "FOND"
-    - "FOND_NC"
-    - "FOND_N"
-    - "FOND_Distillation_Separate_Projector"
-    - "FOND_Distillation_Teacher_Projector"
-    - "FOND_Distillation_Student_Projector"
-  datasets:
-    - "PACS"
-  overlaps:
-    - "high"
-    - "low"
-    - "low_linked_only"
-    - "high_linked_only"
-  n_trials: 3
-  n_hparams: 5
-experiment_parameters:
-  overall_seed: 1
-  data_dir: "data"
-  log_dir: "logs"
-  num_workers: 4    
-  holdout_fraction: 0.2
-  n_steps: 5001
-  checkpoint_freq: 300
+method: grid
+metric:
+  goal: maximize
+  name: val/oacc
+parameters:
+  algo:
+    values:
+      - FOND_Distillation_Separate_Projector
+      - FOND_Distillation_Teacher_Projector
+      - FOND_Distillation_Student_Projector
+  checkpoint_freq:
+    value: 300
+  data_dir:
+    value: /pub0/data/
+  dataset:
+    values:
+      - VLCS
+      - PACS
+  holdout_fraction:
+    value: 0.2
+  hparam_id:
+    values:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+  log_dir:
+    value: logs_distillation
   model_checkpoint:
-    metric: "val/nacc"
-    maximize: True
-  teacher_paths: 
-    PACS:
-      0: "teacher_models/model_step0.pkl"
-      1: "teacher_models/model_step1.pkl"
-      2: "teacher_models/model_step0.pkl"
-      3: "teacher_models/model_step1.pkl"
-    VLCS:
-      0: "teacher_models/model_step0.pkl"
-      1: "teacher_models/model_step1.pkl"
-      2: "teacher_models/model_step0.pkl"
-      3: "teacher_models/model_step1.pkl"
-wandb:
-  entity: "critical-ml-dg"
-  project: "fond-teacher"
+    value:
+      maximize: true
+      metric: val/oacc
+  n_steps:
+    value: 5001
+  num_classes:
+    value: Null
+  num_domain_linked_classes:
+    value: Null
+  num_workers:
+    value: 4
+  overall_seed:
+    value: 1
+  overlap:
+    values:
+      - high
+  teacher_paths:
+    value:
+      PACS:
+        "0": teacher_models/fond-checkpoints-5ewn6jqq-lb4gwn9y_model_step900.ckpt
+        "1": teacher_models/fond-checkpoints-5ewn6jqq-710c64zk_model_step600.ckpt
+        "2": teacher_models/fond-checkpoints-5ewn6jqq-simzmtfc_model_step900.ckpt
+        "3": teacher_models/fond-checkpoints-5ewn6jqq-9hf5f6ag_model_step3000.ckpt
+      VLCS:
+        "0": teacher_models/fond-checkpoints-i4quzpc4-aqrkdsgh_model_step0.ckpt
+        "1": teacher_models/fond-checkpoints-i4quzpc4-1bovu56z_model_step300.ckpt
+        "2": teacher_models/fond-checkpoints-i4quzpc4-xnp3gj4w_model_step900.ckpt
+        "3": teacher_models/fond-checkpoints-i4quzpc4-1bovu56z_model_step300.ckpt
+  test_set_id:
+    values:
+      - 0
+      - 1
+      - 2
+      - 3
+  trial_id:
+    values:
+      - 0
+      - 1
+      - 2

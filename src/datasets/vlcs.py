@@ -23,6 +23,8 @@ class VLCS(MultipleEnvironmentImageFolder):
         hparams: dict,
         overlap_type: str,
         overlap_seed=None,
+        num_classes=None,
+        num_domain_linked_classes=None
     ):
         # print(f"[info] {type(self)}, test_envs: {test_envs}, overlap: {class_overlap_id}")
         self.dir = os.path.join(root, "VLCS/")
