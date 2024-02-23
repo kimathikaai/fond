@@ -118,7 +118,10 @@ class DomainBedImageFolder(ImageFolder):
         return len(self.samples)
 
     def __str__(self):
-        return f"{self.env_name}: is_test_env={self.is_test_env}, allowed_classes={self.allowed_classes}"
+        return (
+            f"{self.env_name}: is_test_env={self.is_test_env}, allowed_classes={self.allowed_classes},"
+            f" list(set(self.targets))={self.classes}, num_samples={len(self)}"
+        )
 
 
 def get_overlapping_classes(
@@ -319,19 +322,27 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
                 remove_classes = list(all_classes - set(filter))
 
                 env_dataset = DomainBedImageFolder(
-                    path, transform=env_transform, remove_classes=remove_classes,
-                    is_test_env=False, allowed_classes=filter, env_name=environment
+                    path,
+                    transform=env_transform,
+                    remove_classes=remove_classes,
+                    is_test_env=False,
+                    allowed_classes=filter,
+                    env_name=environment,
                 )
             else:
                 remove_classes = list(range(self.num_classes, len(all_classes)))
                 env_dataset = DomainBedImageFolder(
-                    path, transform=env_transform, remove_classes=remove_classes,
-                    is_test_env=True, allowed_classes=list(range(self.num_classes)),
-                    env_name=environment
+                    path,
+                    transform=env_transform,
+                    remove_classes=remove_classes,
+                    is_test_env=True,
+                    allowed_classes=list(range(self.num_classes)),
+                    env_name=environment,
                 )
+                assert self.num_classes == len(env_dataset.classes)
 
             # print(f"\n[info] environment: {env_dataset.env_name}, classes: {env_dataset.allowed_classes}, is_test: {env_dataset.is_test_env}")
-            logging.info(f'Created domain -> {env_dataset}')
+            logging.info(f"Created domain -> {env_dataset}")
             self.datasets.append(env_dataset)
 
         self.input_shape = (
@@ -339,7 +350,6 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
             224,
             224,
         )
-        assert self.num_classes == len(self.datasets[-1].classes)
 
     def get_overlapping_classes(
         self, class_split: List[List[int]], num_classes: int
