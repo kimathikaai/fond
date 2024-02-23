@@ -85,6 +85,7 @@ def fit(
     #
     in_splits = []
     out_splits = []
+    relative_test_env = None
     for env_i, env in enumerate(dataset):
         out, in_ = misc.split_dataset(
             env, int(len(env) * holdout_fraction), misc.seed_hash(trial_seed, env_i)
@@ -99,6 +100,12 @@ def fit(
         in_splits.append((in_, in_weights))
         out_splits.append((out, out_weights))
 
+        # determine the relative test env id
+        if env.is_test_env:
+            relative_test_env = env_i
+
+    assert relative_test_env is not None, 'No testing domains'
+
     #
     # Setup data loaders
     #
@@ -110,7 +117,7 @@ def fit(
             num_workers=num_workers,
         )
         for i, (env, env_weights) in enumerate(in_splits)
-        if i not in test_envs
+        if i != relative_test_env
     ]
 
     eval_loaders = [
@@ -222,7 +229,7 @@ def fit(
                 domain_idx = int(name[3])
 
                 loader_type = ""
-                if domain_idx in test_envs:
+                if domain_idx == relative_test_env:
                     if "in" in name:  # Note 'in' is the 80%
                         loader_type = "test"
                     else:
