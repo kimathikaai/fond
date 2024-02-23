@@ -1,6 +1,4 @@
 import collections
-import copy
-import json
 import logging
 import os
 import time
@@ -10,6 +8,7 @@ import lightning as L
 import numpy as np
 import torch
 import wandb
+from tqdm import tqdm
 
 from src.datasets import DATASETS
 from src.networks import ALGORITHMS
@@ -60,7 +59,7 @@ def fit(
         hparams = random_hparams(
             algorithm_name, dataset_name, misc.seed_hash(hparams_seed, trial_seed)
         )
-    print("[info] hparams: ", hparams)
+    logging.info(f"hparams: {hparams}")
 
     # Add hyperparameters to config
     wandb.config.update({"hparams": hparams})
@@ -104,7 +103,8 @@ def fit(
         if env.is_test_env:
             relative_test_env = env_i
 
-    assert relative_test_env is not None, 'No testing domains'
+    assert relative_test_env is not None, "No testing domains"
+    logging.info(f"test_envs={test_envs}, relative_test_env={relative_test_env}")
 
     #
     # Setup data loaders
@@ -133,7 +133,7 @@ def fit(
 
     eval_loader_names = ["env{}_in".format(i) for i in range(len(in_splits))]
     eval_loader_names += ["env{}_out".format(i) for i in range(len(out_splits))]
-    print(f"[info] Created data loaders:  {eval_loader_names}")
+    logging.info(f"Created data loaders:  {eval_loader_names}")
 
     train_minibatches_iterator = zip(*train_loaders)
     steps_per_epoch = min([len(env) / hparams["batch_size"] for env, _ in in_splits])
@@ -161,12 +161,12 @@ def fit(
             hparams=hparams,
         )
     algorithm.to(device)
-    print(f"[info] Algorithm {algorithm_name} setup")
+    logging.info(f"Algorithm {algorithm_name} setup")
 
     #
     # Training loop
     #
-    print(f"[info] Begining training loop, with {steps_per_epoch} steps per epoch")
+    logging.info(f"Begining training loop, with {steps_per_epoch} steps per epoch")
     checkpoint_vals = collections.defaultdict(lambda: [])
 
     # track the model checkpoint value
@@ -181,7 +181,7 @@ def fit(
         summary="max" if model_checkpoint["maximize"] else "min",
     )
 
-    for step in range(n_steps):
+    for step in tqdm(list(range(n_steps))):
         step_start_time = time.time()
 
         # Get batches
@@ -281,9 +281,9 @@ def fit(
                     # remove previous checkpoint
                     os.remove(best_model_checkpoint_path)
                     # update
-                    print(
-                        "[info] Updated {} from {} to {}".format(
-                            checkpoint_metric,
+                    logging.info(
+                        "Updated {} from {} to {}".format(
+                            model_checkpoint["metric"],
                             best_model_checkpoint_value,
                             current_model_checkpoint_value,
                         )
@@ -297,9 +297,9 @@ def fit(
                     # remove previous checkpoint
                     os.remove(best_model_checkpoint_path)
                     # update
-                    print(
-                        "[info] Updated {} from {} to {}".format(
-                            checkpoint_metric,
+                    logging.info(
+                        "Updated {} from {} to {}".format(
+                            model_checkpoint["metric"],
                             best_model_checkpoint_value,
                             current_model_checkpoint_value,
                         )
