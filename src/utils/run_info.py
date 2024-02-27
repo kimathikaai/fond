@@ -36,14 +36,24 @@ def find_best_steps(
     test_metric: str,
     metric_goal: str,
 ):
+    """
+    Returns the best validation peformance, the step
+    and the corresponding test performance at that step
+    """
     assert metric_goal in ["min", "max"]
 
     best_step_info = {}
+    # for each run
     for run in tqdm(runs):
-        run_history = run.scan_history(keys=[val_metric, "step"])
+        # get the validation history
+        run_validation_history = run.scan_history(keys=[val_metric, "step"])
+        run_test_history = run.scan_history(keys=[test_metric, "step"])
+
         best_metric = float("inf") if metric_goal == "min" else float("-inf")
         best_step = None
-        for row in run_history:
+
+        # identify the best validation performance and step
+        for row in run_validation_history:
             step_metric = row[val_metric]
             if metric_goal == "min" and step_metric < best_metric:
                 best_metric = step_metric
@@ -52,8 +62,17 @@ def find_best_steps(
                 best_metric = step_metric
                 best_step = row["step"]
 
+        # grab the correpsonding validation performance
+        test_value = None
+        for row in run_test_history:
+            step = row['step']
+            if step == best_step:
+                test_value = row[test_metric]
+        assert test_value is not None, 'Could not find the corresponding test_value'
+
         best_step_info[run] = {
             val_metric: best_metric,
             "step_number": best_step,
+            test_metric: test_value
         }
     return best_step_info
