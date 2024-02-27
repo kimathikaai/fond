@@ -8,8 +8,8 @@ def create_domains(
 ) -> List[List[int]]:
     """
     Determine and distribute domain-linked and domain-shared classes.
-    Domain-linked classes will come from the same domain, i.e., idx=0.
-    Domain-shared classes will exist in each of the remaining domains
+    Domain-linked classes will come from the same domain, i.e., idx=0
+    Domain-shared classes will exist in each of the domains
 
     Args:
         num_classes: number of overall classes within all the domains
@@ -24,8 +24,8 @@ def create_domains(
     # domains = [domain_shared.copy() for i in range(num_train_domains)]
     domains = [[] for i in range(num_train_domains)]
 
-    # first domain is domain-linked only
-    domains[0] = domain_linked
+    # first domain is domain-linked only with domain-shared
+    domains[0] = domain_linked + domain_shared.copy()
     # other domains contain domain-shared only
     domains[1:] = [domain_shared.copy() for i in range(1, num_train_domains)]
 
