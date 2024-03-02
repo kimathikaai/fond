@@ -85,6 +85,7 @@ def fit(
     in_splits = []
     out_splits = []
     relative_test_env = None
+    class_counts = [0] * dataset._num_classes
     for env_i, env in enumerate(dataset):
         out, in_ = misc.split_dataset(
             env, int(len(env) * holdout_fraction), misc.seed_hash(trial_seed, env_i)
@@ -95,6 +96,13 @@ def fit(
             out_weights = misc.make_weights_for_balanced_classes(out)
         else:
             in_weights, out_weights = None, None
+
+        # Do a class counts if using BLV
+        if algorithm_name == "FOND_BLV":
+            train_targets = [env.targets[i] for i in in_.keys]
+            counter = collections.Counter(train_targets)
+            for env_class_id, env_class_count in counter.items():
+                class_counts[env_class_id] += env_class_count
 
         in_splits.append((in_, in_weights))
         out_splits.append((out, out_weights))
@@ -152,6 +160,14 @@ def fit(
             num_domains=len(dataset) - len(test_envs),
             hparams=hparams,
             teacher=teacher_algorithm,
+        )
+    elif "blv" in algorithm_name.lower():
+        algorithm = ALGORITHMS[algorithm_name](
+            input_shape=dataset.input_shape,
+            num_classes=dataset.num_classes,
+            num_domains=len(dataset) - len(test_envs),
+            hparams=hparams,
+            class_counts=class_counts,
         )
     else:
         algorithm = ALGORITHMS[algorithm_name](

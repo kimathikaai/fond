@@ -1,8 +1,11 @@
 from src.networks.base import ERM
 from src.networks.fond import FOND, FOND_N, FOND_NC
+from src.networks.fond_blv import FOND_BLV
 from src.networks.fond_distillation import (
-    FOND_Distillation_Separate_Projector, FOND_Distillation_Student_Projector,
-    FOND_Distillation_Teacher_Projector)
+    FOND_Distillation_Separate_Projector,
+    FOND_Distillation_Student_Projector,
+    FOND_Distillation_Teacher_Projector,
+)
 
 ALGORITHMS = {
     "ERM": ERM,
@@ -12,4 +15,5 @@ ALGORITHMS = {
     "FOND_Distillation_Separate_Projector": FOND_Distillation_Separate_Projector,
     "FOND_Distillation_Teacher_Projector": FOND_Distillation_Teacher_Projector,
     "FOND_Distillation_Student_Projector": FOND_Distillation_Student_Projector,
+    "FOND_BLV": FOND_BLV,
 }

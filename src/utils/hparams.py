@@ -1,6 +1,7 @@
 """
 Hyper-parameter registry
 """
+
 import hashlib
 
 import numpy as np
@@ -50,6 +51,7 @@ def _hparams(algorithm, dataset, random_seed):
         or algorithm == "FOND_NC"
         or algorithm == "FOND_N"
         or algorithm == "NOC"
+        or algorithm == "FOND_BLV"
     ):
         _hparam("temperature", 0.07, lambda r: 0.07 * r.uniform(0.75, 1.25))
         _hparam("base_temperature", 0.07, lambda r: 0.07)
