@@ -135,6 +135,7 @@ class FOND_BLV(FONDBase):
     def __init__(self, input_shape, num_classes, num_domains, hparams, class_counts):
         super(FOND_BLV, self).__init__(input_shape, num_classes, num_domains, hparams)
         self.blv_loss = BlvLoss(class_counts)
+        self.blv_lmbd = hparams["blv_lmbd"]
 
     def update(self, minibatches, unlabeled=None):
         values = self.preprocess(minibatches)
@@ -177,7 +178,7 @@ class FOND_BLV(FONDBase):
         blv_loss = self.blv_loss.forward(classifs, targets)
 
         loss = (
-            blv_loss
+            self.blv_lmbd * blv_loss
             + self.xdom_lmbd * xdom_loss
             + self.error_lmbd * torch.abs(error_loss)
         )

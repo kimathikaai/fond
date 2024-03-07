@@ -15,7 +15,7 @@ parameters:
     value: /pub0/data/
   dataset:
     values:
-      # - VLCS
+      - VLCS
       - PACS
   holdout_fraction:
     value: 0.2
@@ -23,11 +23,11 @@ parameters:
     values:
       - 0
       - 1
-      - 2
+      # - 2
       # - 3
       # - 4
   log_dir:
-    value: logs
+    value: logs_distillation
   model_checkpoint:
     value:
       maximize: true
@@ -66,5 +66,5 @@ parameters:
   trial_id:
     values:
       - 0
-      # - 1
+      - 1
       # - 2

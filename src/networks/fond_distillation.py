@@ -12,6 +12,7 @@ class FOND_Distillation(FONDBase):
         self.teacher_setting = None
         self.distillation_temperature = hparams["distillation_temperature"]
         self.teacher = teacher
+        self.distillation_lmbd = hparams["distillation_lmbd"]
 
         # Freeze the parameters of the teacher network
         for param in self.teacher.classifier.parameters():
@@ -127,7 +128,7 @@ class FOND_Distillation(FONDBase):
         if torch.isnan(teacher_loss):
             teacher_loss = torch.tensor(0).to(targets.device)
 
-        loss = class_loss + teacher_loss + self.xdom_lmbd * xdom_loss
+        loss = class_loss + self.distillation_lmbd * teacher_loss + self.xdom_lmbd * xdom_loss
 
         self.optimizer.zero_grad()
         loss.backward()
