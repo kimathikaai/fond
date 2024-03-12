@@ -140,12 +140,12 @@ def accuracy(network, loader, weights, device, dataset):
             non_overlap_class_acc.append(compute_per_class_acc[i])
 
     if len(non_overlap_class_acc) == 0:
-        non_overlap_class_acc = -1
+        non_overlap_class_acc = np.nan
     else:
         non_overlap_class_acc = np.mean(non_overlap_class_acc)
 
     if len(overlap_class_acc) == 0:
-        overlap_class_acc = -1
+        overlap_class_acc = np.nan
     else:
         overlap_class_acc = np.mean(overlap_class_acc)
 
